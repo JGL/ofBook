@@ -14,7 +14,7 @@ To solve this we usually use threads. Threads are a way of executing certain tas
 
 Every application has at least 1 thread. In openFrameworks, that thread is where the setup/update/draw loop happens. We'll call this the main (or openGL) thread. But we can create more threads and each of them will run separately from the others.
 
-So if we want to load an image in the middle of our application, instead of loading our image in update, we can create a thread that loads the image for us. The problem with this is that once we create a thread, the main thread doesn't know when it has finished, so we need to be able to communicate the results from our auxiliary thread to the main one. There's also problems that might arrise from different threads accessing the same areas in memory. We'll need some mechanisms to synchronize the access to shared memory between 2 or more threads.
+So if we want to load an image in the middle of our application, instead of loading our image in update, we can create a thread that loads the image for us. The problem with this is that once we create a thread, the main thread doesn't know when it has finished, so we need to be able to communicate the results from our auxiliary thread to the main one. There are also problems that might arrise from different threads accessing the same areas in memory. We'll need some mechanisms to synchronize the access to shared memory between 2 or more threads.
 
 First let's see how to create a thread in openFrameworks.
 
@@ -164,9 +164,9 @@ void ofApp::keyPressed(int key){
 }
 ```
 
-Another possibility would be to use 1 thread only. To do that a possible solution would be to use a queue in our loading thread whenever we want to load a new image. To do this we insert it's path in the queue and when the threadedFunction finishes loading one image it checks the queue. If there's a new image it loads it and it is removed from the queue.
+Another possibility would be to use 1 thread only. To do that a possible solution would be to use a queue in our loading thread whenever we want to load a new image. To do this we insert it's path in the queue and when the threadedFunction finishes loading one image it checks the queue. If there is a new image it loads it and it is removed from the queue.
 
-The problem with this is that we will be trying to access the queue from 2 different threads, and as we've mentioned in the memory chapter, when we add or remove elements to a memory structure there's the possibility that the memory will be moved somewhere else. If that happens while one thread is trying to access it we can easily end up with a dangling pointer that will cause the application to crash. Imagine the next sequence of instruction calls from the 2 different threads:
+The problem with this is that we will be trying to access the queue from 2 different threads, and as we've mentioned in the memory chapter, when we add or remove elements to a memory structure there is the possibility that the memory will be moved somewhere else. If that happens while one thread is trying to access it we can easily end up with a dangling pointer that will cause the application to crash. Imagine the next sequence of instruction calls from the 2 different threads:
 
         loader thread: finished loading an image
         loader thread: pos = get memory address of next element to load
@@ -241,7 +241,7 @@ Because of that, openGL knows how to work with one thread, the main thread from 
 
 When we call `img.loadImage(path)` on an ofImage, it'll actually do some openGL calls, mainly create a texture and upload to it the contents of the image. If we did that from a thread that isn't the GL thread, our application will probably crash or just don't load the texture properly.
 
-There's a way to tell ofImage, and most other objects that contain pixels and textures in openFrameworks, to not use those textures and instead work only with pixels. That way we could use an ofImage to load the images to pixels and later in the main thread activate the textures to be able to draw the images:
+There is a way to tell ofImage and most other objects that contain pixels and textures in openFrameworks to not use those textures and instead work only with pixels. That way we could use an ofImage to load the images to pixels and later in the main thread activate the textures to be able to draw the images:
 
 ```cpp
 class ImageLoader: public ofThread{
@@ -300,9 +300,9 @@ A very specific case is sound, sound APIs in openFrameworks, in particular ofSou
 
 Before we started the openGL and threads section we were talking about how accessing the same memory area from 2 different threads can cause problems. This mostly occurs if we write from one of the threads causing the data structure to move in memory or make a location invalid. 
 
-To avoid that we need something that allows to access that data to only one thread simultaneously. For that we use something called mutex. When one thread want's to access the shared data, it locks the mutex and when a mutex is locked any other thread trying to lock it will get blocked there until the mutex is unlocked again. You can think of this as some kind of token that each thread needs to have to be able to access the shared memory. 
+To avoid that we need something that allows to access that data to only one thread simultaneously. For that we use something called mutex. When one thread wants to access the shared data, it locks the mutex and when a mutex is locked any other thread trying to lock it will get blocked there until the mutex is unlocked again. You can think of this as some kind of token that each thread needs to have to be able to access the shared memory. 
 
-Imagine you are with a group of people building a tower of cards, if more than one at the same time tries to put cards on it it's very possible that it'll collapse so to avoid that, anyone who wants to put a card on the tower, needs to have a small stone, that stone gives them permission to add cards to the tower and there's only one, so if someone wants to add cards they need to get the stone but if someone else has the stone then they have to wait till the stone is freed. If more than one wants to add cards and the stone is not free they queue, the first one in the queue gets the stone when it's finally freed.
+Imagine you are with a group of people building a tower of cards, if more than one at the same time tries to put cards on it it's very possible that it'll collapse so to avoid that, anyone who wants to put a card on the tower, needs to have a small stone, that stone gives them permission to add cards to the tower and there is only one, so if someone wants to add cards they need to get the stone but if someone else has the stone then they have to wait till the stone is freed. If more than one wants to add cards and the stone is not free they queue, the first one in the queue gets the stone when it's finally freed.
 
 A mutex is something like that, to *get the stone* you call lock on the mutex, once you are done, you call unlock. If some other thread calls lock while another thread is holding it, they are put in to a queue, the first thread that called lock will get the mutex when it's finally unlocked:
 
@@ -368,7 +368,7 @@ As we've said before, when we lock a mutex we stop other threads from accessing 
 
 ## External threads and double buffering
 
-Sometimes we don't have a thread that we've created ourselves, but instead we are using a library that creates it's own thread and calls our application on a callback. Let's see an example with an imaginary video library that calls some function whenever there's a new frame from the camera, that kind of function is called a callback because some library *calls us back* when something happens, the key and mouse events functions in OF are examples of callbacks.
+Sometimes we don't have a thread that we've created ourselves, but instead we are using a library that creates it's own thread and calls our application on a callback. Let's see an example with an imaginary video library that calls some function whenever there is a new frame from the camera, that kind of function is called a callback because some library *calls us back* when something happens, the key and mouse events functions in OF are examples of callbacks.
 
 ```cpp
 class VideoRenderer{
@@ -489,13 +489,13 @@ public:
 }
 ```
 
-With this we are locking the mutex for a very short time in the frame callback to set `newFrame = true` in the main thread. We do this to check if there's a new frame and then to swap the front and back buffers. `swap` is a c++ standard library function that swaps 2 memory areas so if we swap 2 ints `a` and `b`, `a` will end up having the value of `b` and viceversa, usually this happens by copying the variables but `swap` is overridden for ofPixels and swaps the internal pointers to memory inside `frontPixels` and `backPixels` to point to one another. After calling `swap`, `frontPixels` will be pointing to what `backPixels` was pointing to before, and viceversa. This operation only involves copying the values of a couple of memory addresses plus the size and number of channels. For this reason it's way faster than copying the whole image or uploading to a texture.
+With this we are locking the mutex for a very short time in the frame callback to set `newFrame = true` in the main thread. We do this to check if there is a new frame and then to swap the front and back buffers. `swap` is a c++ standard library function that swaps 2 memory areas so if we swap 2 ints `a` and `b`, `a` will end up having the value of `b` and viceversa, usually this happens by copying the variables but `swap` is overridden for ofPixels and swaps the internal pointers to memory inside `frontPixels` and `backPixels` to point to one another. After calling `swap`, `frontPixels` will be pointing to what `backPixels` was pointing to before, and viceversa. This operation only involves copying the values of a couple of memory addresses plus the size and number of channels. For this reason it's way faster than copying the whole image or uploading to a texture.
 
 Triple buffering is a similar technique that involves using 3 buffers instead of 2 and is useful in some cases. We won't see it in this chapter.
 
 ## ofScopedLock
 
-Sometimes we need to lock a function until it returns, or lock for the duration of a full block. That is exactly what a scoped lock does. If you've read the memory chapter you probably remember about what we called initially, *stack semantics*, or RAII [Resource Adquisition Is Initialization](http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization). A scoped lock makes use of that technique to lock a mutex for the whole duration of the block, even any copy that might happen in the same `return` call if there's one.
+Sometimes we need to lock a function until it returns, or lock for the duration of a full block. That is exactly what a scoped lock does. If you've read the memory chapter you probably remember about what we called initially, *stack semantics*, or RAII [Resource Adquisition Is Initialization](http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization). A scoped lock makes use of that technique to lock a mutex for the whole duration of the block, even any copy that might happen in the same `return` call if there is one.
 
 For example, the previous example could be turned into:
 
@@ -544,7 +544,7 @@ public:
 
 A ScopedLock is a good way of avoiding problems because we forgot to unlock a mutex and allows us to use the `{}` to define the duration of the lock which is more natural to C++.
 
-There's one particular case when the only way to properly lock is by using a scoped lock. That's when we want to return a value and keep the function locked until after the value was returned. In that case we can't use a normal lock:
+There is one particular case when the only way to properly lock is by using a scoped lock. That's when we want to return a value and keep the function locked until after the value was returned. In that case we can't use a normal lock:
 
 ```cpp
 
@@ -560,7 +560,7 @@ We could make a copy internally and return that later, but with this pattern we 
 
 ## Poco::Condition
 
-A condition, in threads terminology, is an object that allows to synchronize 2 threads. The pattern is something like this: one thread waits for something to happen before starting it's processing. When it finishes, instead of finishing the thread, it locks in the condition and waits till there's new data to process. An example of this could be the image loader class we were working with earlier. Instead of starting one thread for every image, we might have a queue of images to load. The main thread adds image paths to that queue and the auxiliary thread loads the images from that queue until it is empty. The auxiliary thread then locks on a condition until there's more images to load.
+A condition, in threads terminology, is an object that allows to synchronize 2 threads. The pattern is something like this: one thread waits for something to happen before starting it's processing. When it finishes, instead of finishing the thread, it locks in the condition and waits till there is new data to process. An example of this could be the image loader class we were working with earlier. Instead of starting one thread for every image, we might have a queue of images to load. The main thread adds image paths to that queue and the auxiliary thread loads the images from that queue until it is empty. The auxiliary thread then locks on a condition until there are more images to load.
 
 Such an example would be too long to write in this section, but if you are interested in how something like that might work, take a look at ofxThreadedImageLoaded (which does just that).
 
@@ -629,7 +629,7 @@ private:
 }
 ```
 
-That alleviates the problem slightly but not completely. The thread won't consume as much CPU now, but it sleeps for an unnecesarily while when there's still urls to load. It also continues to run in the background even when there's no more urls to ping. Specially in small devices powered by batteries, like a phone, this pattern would drain the battery in a few hours.
+That alleviates the problem slightly but not completely. The thread won't consume as much CPU now, but it sleeps for an unnecesarily while when there are still urls to load. It also continues to run in the background even when there are no more urls to ping. Specially in small devices powered by batteries, like a phone, this pattern would drain the battery in a few hours.
 
 The best solution to this problem is to use a condition:
 
@@ -668,5 +668,5 @@ Whenever the queue gets emptied the condition will block the execution of the th
 
 ## Conclusion
 
-As we've seen threads are a powerfull tool to allow for several tasks to happen simultaneously in the same application. They are also hard to use, the main problem is usually accessing shared resouces, usually shared memory. We've only seen one specific case, how to use threads to do background tasks that will pause the execution of the main task, there's other cases where we can parallelize 1 task by dividing it in small subtasks like for example doing some image operation by dividing the image in for subregions and assigning a thread to each. For those cases there's special libraries that make the syntax easier, OpenCv for example can do some operations using more than one core through [TBB](https://www.threadingbuildingblocks.org/) and there's libraries like the same TBB or [OpenMP](http://openmp.org/wp/) that allow to specify that a loop should be divided and run simultaneol¡usly in more than one core
+As we've seen threads are a powerfull tool to allow for several tasks to happen simultaneously in the same application. They are also hard to use, the main problem is usually accessing shared resources, usually shared memory. We've only seen one specific case, how to use threads to do background tasks that will pause the execution of the main task, there are other cases where we can parallelize one task by dividing it in small subtasks like for example doing some image operation by dividing the image in for subregions and assigning a thread to each. For those cases there are special libraries that make the syntax easier, OpenCv for example can do some operations using more than one core through [TBB](https://www.threadingbuildingblocks.org/) and there are libraries like the same TBB or [OpenMP](http://openmp.org/wp/) that allow the user to specify that a loop should be divided and run simultaneously in more than one core.
 
