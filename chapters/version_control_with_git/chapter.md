@@ -29,7 +29,7 @@ In the next section, I'll talk a bit about the different choices you have when c
 
 ## Different version control systems
 
-There is a number of version control systems out there, some of which you've maybe encountered already.
+There are a number of version control systems out there, some of which you've maybe encountered already.
 They can be divided into two big camps: "centralized" and "distributed" systems.
 
 In [*centralized version control systems*](http://en.wikipedia.org/wiki/Revision_control), a central server orchestrates the various tasks the version control system performs, and programmers synchronize with this server.
